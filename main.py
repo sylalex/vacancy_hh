@@ -1,8 +1,11 @@
+from builtins import tuple
+
 import requests
 import pprint
 import json
 import time
 from flask import Flask, render_template, request
+import sqlite3
 
 app = Flask(__name__)
 
@@ -13,7 +16,8 @@ def get_vac(search='ml', per_page=20):
     # per_page = 20
     lst_vac_for_html = []
     lst = []
-
+    con = sqlite3.connect("hh.sqlite")
+    cursor = con.cursor()
     params = {'page': 1,
               'per_page': per_page,
               'text': search,
@@ -34,6 +38,17 @@ def get_vac(search='ml', per_page=20):
     key_skills = []
     salary = 0
     for i in range(len(list_vac)):
+        cursor.execute("insert or ignore into city (name) VALUES (?)", (list_vac[i]['area']['name'],))
+        cursor.execute("select * from city where name=?", (list_vac[i]['area']['name'],))
+        city_values = cursor.fetchone()
+        # print(city_values)
+        cursor.execute("insert or ignore into currency (name) VALUES (?)", (list_vac[i]['salary']['currency'],))
+        cursor.execute("select * from currency where name=?", (list_vac[i]['salary']['currency'],))
+        currency_values = cursor.fetchone()
+        # print(currency_values)
+        cursor.execute("insert into vacancy (name, city_id, salary_from, salary_to, currency_id) VALUES (?,?,?,?,?)",
+                       (list_vac[i]['name'], city_values[0], list_vac[i]['salary']['from'],
+                        list_vac[i]['salary']['to'], currency_values[0]))
         dct = {'name': list_vac[i]['name'], 'city': list_vac[i]['area']['name'], 'salary': list_vac[i]['salary']}
         lst_vac_for_html.append(dct)
         # print(list_vac[i]['url'])
@@ -74,6 +89,9 @@ def get_vac(search='ml', per_page=20):
     # pprint.pprint(key_skills)
     # with open(f"{search}.json", "w") as f:
     #     json.dump(lst, f)
+    cursor.execute("select * from vacancy")
+    print(cursor.fetchall())
+    con.commit()
     return lst_vac_for_html
 
 
@@ -86,9 +104,9 @@ def index():
 def services():
     if request.method == 'POST':
         lst = get_vac(request.form['search'], int(request.form['per_page']))
-        return render_template('services.html', lst=lst)
+        return render_template('services.html', lst=lst, methods='POST')
     else:
-        return render_template('services.html')
+        return render_template('services.html', methods='GET')
 
 
 @app.route('/contact/')
