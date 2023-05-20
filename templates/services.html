@@ -9,7 +9,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 <html lang="zxx">
 
 <head>
-    <title>Pervasive a Corporate Category Flat Bootstrap Responsive website Template | Services :: Web-exito.ru</title>
+    <title>ПАРСЕР HH | Поиск</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8" />
     <meta name="keywords" content="Pervasive Responsive web template, Bootstrap Web Templates, Flat Web Templates, Android Compatible web template, 
@@ -24,10 +24,10 @@ License URL: http://creativecommons.org/licenses/by/3.0/
         }
     </script>
     <!-- Custom Theme files -->
-    <link href="css/bootstrap.css" type="text/css" rel="stylesheet" media="all">
-    <link href="css/style.css" type="text/css" rel="stylesheet" media="all">
+    <link href="/static/css/bootstrap.css" type="text/css" rel="stylesheet" media="all">
+    <link href="/static/css/style.css" type="text/css" rel="stylesheet" media="all">
     <!-- font-awesome icons -->
-    <link href="css/fontawesome-all.min.css" rel="stylesheet">
+    <link href="/static/css/fontawesome-all.min.css" rel="stylesheet">
 	<!-- //Custom Theme files -->
     <!-- online-fonts -->
     <link href="//fonts.googleapis.com/css?family=Ubuntu:300,300i,400,400i,500,500i,700,700i" rel="stylesheet">
@@ -52,15 +52,15 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav ml-lg-auto text-center">
                         <li class="nav-item mr-3 mt-lg-0 mt-3">
-                            <a class="nav-link" href="index.html">Главная
+                            <a class="nav-link" href="/">Главная
                                 <span class="sr-only">(current)</span>
                             </a>
                         </li>
 						<li class="nav-item active mr-3 mt-lg-0 mt-3">
-                            <a class="nav-link" href="services.html">Поиск</a>
+                            <a class="nav-link" href="/services/">Поиск</a>
                         </li>
                         <li class="nav-item mr-3 mt-lg-0 mt-3">
-                            <a class="nav-link" href="contact.html">Контакты</a>
+                            <a class="nav-link" href="/contact/">Контакты</a>
                         </li>
                     </ul>
                 </div>
@@ -75,19 +75,51 @@ License URL: http://creativecommons.org/licenses/by/3.0/
         <div class="container py-lg-5">
             <div class="text-center wthree-title pb-sm-5 pb-3">
                 <h3 class="tittle-w3ls pb-4">Форма для ввода данных</h3>
-                <form action="#" method="get" class="f-color pt-3">
+                <form method="post" class="f-color pt-3">
                             <div class="form-group">
                                 <label for="search">Введите вакансию</label>
-                                <input type="text" class="form-control" id="search" required>
+                                <input type="text" class="form-control" id="search" name="search" required>
                             </div>
                             <div class="form-group">
                                 <label for="per_page">Введите количество вакансий</label>
-                                <input type="text" class="form-control" id="per_page" required>
+                                <input type="text" class="form-control" id="per_page" name="per_page" required>
                             </div>
                             <button type="submit" class="btn btn-danger btn-block">Найти</button>
                         </form>
-            </div>
 
+            </div>
+            <div class="text-left">
+                <table border="1">
+                    <th class="text-center">
+                       Вакансия
+                    </th>
+                    <th class="text-center">
+                       Город
+                    </th>
+                    <th class="text-center">
+                       Зарплата
+                    </th>
+                    {% for dct in lst %}
+                    <tr>
+                        <td>
+                            {{ dct.name }}
+                        </td>
+                        <td class="text-center">
+                            {{ dct.city }}
+                        </td>
+                        <td class="text-center">
+                            {% if dct.salary.from != None and dct.salary.to != None %}
+                            {{dct.salary.from}} - {{dct.salary.to}} {{dct.salary.currency}}
+                            {% elif dct.salary.from != None and dct.salary.to == None %}
+                            от {{dct.salary.from}} {{dct.salary.currency}}
+                            {% elif dct.salary.from == None and dct.salary.to != None %}
+                            до {{dct.salary.to}} {{dct.salary.currency}}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
         </div>
     </div>
     <!-- //services-->
@@ -97,11 +129,11 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 
 
 <!-- js -->
-    <script src="js/jquery-2.2.3.min.js"></script>
+    <script src="/static/js/jquery-2.2.3.min.js"></script>
 <!-- //js -->
  <!-- start-smooth-scrolling -->
-    <script src="js/move-top.js"></script>
-    <script src="js/easing.js"></script>
+    <script src="/static/js/move-top.js"></script>
+    <script src="/static/js/easing.js"></script>
     <script>
         jQuery(document).ready(function ($) {
             $(".scroll").click(function (event) {
@@ -132,12 +164,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 
         });
     </script>
-    <script src="js/SmoothScroll.min.js"></script>
+    <script src="/static/js/SmoothScroll.min.js"></script>
     <!-- //smooth-scrolling-of-move-up -->
     <!-- Bootstrap core JavaScript
 ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="js/bootstrap.js"></script>
+    <script src="/static/js/bootstrap.js"></script>
 </body>
 
 </html>
