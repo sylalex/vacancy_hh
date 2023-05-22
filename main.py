@@ -1,8 +1,14 @@
+from builtins import tuple
+
 import requests
 import pprint
 import json
 import time
 from flask import Flask, render_template, request
+import sqlite3
+from sqlalchemy import Column, Integer, String, create_engine, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 app = Flask(__name__)
 
@@ -13,6 +19,47 @@ def get_vac(search='ml', per_page=20):
     # per_page = 20
     lst_vac_for_html = []
     lst = []
+    # con = sqlite3.connect("hh.sqlite")
+    # cursor = con.cursor()
+    engine = create_engine('sqlite:///hh.sqlite')
+    Base = declarative_base()
+
+    class Vacancy(Base):
+        __tablename__ = 'vacancy'
+        id = Column(Integer, primary_key=True)
+        name = Column(String)
+        city_id = Column(Integer, ForeignKey('city.id'))
+        salary_from = Column(Integer)
+        salary_to = Column(Integer)
+        currency_id = Column(Integer, ForeignKey('currency.id'))
+
+        def __init__(self, name, city_id, salary_from, salary_to, currency_id):
+            self.name = name
+            self.city_id = city_id
+            self.salary_from = salary_from
+            self.salary_to = salary_to
+            self.currency_id = currency_id
+
+    class City(Base):
+        __tablename__ = 'city'
+        id = Column(Integer, primary_key=True)
+        name = Column(String, unique=True)
+
+        def __init__(self, name):
+            self.name = name
+
+    class Currency(Base):
+        __tablename__ = 'currency'
+        id = Column(Integer, primary_key=True)
+        name = Column(String, unique=True)
+
+        def __init__(self, name):
+            self.name = name
+
+    Base.metadata.create_all(engine)
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
     params = {'page': 1,
               'per_page': per_page,
@@ -34,6 +81,29 @@ def get_vac(search='ml', per_page=20):
     key_skills = []
     salary = 0
     for i in range(len(list_vac)):
+        # cursor.execute("insert or ignore into city (name) VALUES (?)", (list_vac[i]['area']['name'],))
+        insert_com = City.__table__.insert().prefix_with('OR IGNORE').values(name=list_vac[i]['area']['name'])
+        session.execute(insert_com)
+        # session.add(City(list_vac[i]['area']['name']))
+
+        # cursor.execute("select * from city where name=?", (list_vac[i]['area']['name'],))
+        city_values = session.query(City.id).filter(City.name == list_vac[i]['area']['name']).first()
+        # city_values = cursor.fetchone()
+        # print(city_values)
+        # cursor.execute("insert or ignore into currency (name) VALUES (?)", (list_vac[i]['salary']['currency'],))
+        insert_com = Currency.__table__.insert().prefix_with('OR IGNORE').values(name=list_vac[i]['salary']['currency'])
+        session.execute(insert_com)
+        # session.add(Currency(list_vac[i]['salary']['currency']))
+
+        # cursor.execute("select * from currency where name=?", (list_vac[i]['salary']['currency'],))
+        currency_values = session.query(Currency.id).filter(Currency.name == list_vac[i]['salary']['currency']).first()
+        # currency_values = cursor.fetchone()
+        # print(currency_values)
+        # cursor.execute("insert into vacancy (name, city_id, salary_from, salary_to, currency_id) VALUES (?,?,?,?,?)",
+        #                (list_vac[i]['name'], city_values[0], list_vac[i]['salary']['from'],
+        #                 list_vac[i]['salary']['to'], currency_values[0]))
+        session.add(Vacancy(list_vac[i]['name'], city_values[0], list_vac[i]['salary']['from'],
+                            list_vac[i]['salary']['to'], currency_values[0]))
         dct = {'name': list_vac[i]['name'], 'city': list_vac[i]['area']['name'], 'salary': list_vac[i]['salary']}
         lst_vac_for_html.append(dct)
         # print(list_vac[i]['url'])
@@ -74,6 +144,13 @@ def get_vac(search='ml', per_page=20):
     # pprint.pprint(key_skills)
     # with open(f"{search}.json", "w") as f:
     #     json.dump(lst, f)
+    # cursor.execute("select * from vacancy")
+    # print(cursor.fetchall())
+    # con.commit()
+    session.commit()
+    for vac in session.query(Vacancy).all():
+        city = session.query(City).filter(vac.city_id == City.id).first()
+        print(f'{vac.name} ({city.name})')
     return lst_vac_for_html
 
 
@@ -86,9 +163,9 @@ def index():
 def services():
     if request.method == 'POST':
         lst = get_vac(request.form['search'], int(request.form['per_page']))
-        return render_template('services.html', lst=lst)
+        return render_template('services.html', lst=lst, methods='POST')
     else:
-        return render_template('services.html')
+        return render_template('services.html', methods='GET')
 
 
 @app.route('/contact/')
